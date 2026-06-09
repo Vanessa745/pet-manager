@@ -1,0 +1,105 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Rol {
+  ADMIN
+  USER
+}
+
+enum Sexo {
+  MACHO
+  HEMBRA
+  DESCONOCIDO
+}
+
+model Usuario {
+  id            Int      @id @default(autoincrement())
+  nombre        String
+  email         String   @unique
+  password      String
+  rol           Rol      @default(USER)
+  estado        Boolean  @default(true)
+  fechaRegistro DateTime @default(now())
+
+  @@map("usuarios")
+}
+
+model Dueno {
+  id            Int       @id @default(autoincrement())
+  nombre        String
+  apellido      String
+  ci            String    @unique
+  telefono      String
+  email         String?
+  direccion     String?
+  estado        Boolean   @default(true)
+  fechaRegistro DateTime  @default(now())
+
+  mascotas      Mascota[]
+
+  @@map("duenos")
+}
+
+model Especie {
+  id            Int       @id @default(autoincrement())
+  nombre        String    @unique
+  descripcion   String?
+  estado        Boolean   @default(true)
+  fechaRegistro DateTime  @default(now())
+
+  razas         Raza[]
+  mascotas      Mascota[]
+
+  @@map("especies")
+}
+
+model Raza {
+  id            Int       @id @default(autoincrement())
+  nombre        String
+  descripcion   String?
+  estado        Boolean   @default(true)
+  fechaRegistro DateTime  @default(now())
+
+  especieId     Int
+  especie       Especie   @relation(fields: [especieId], references: [id])
+
+  mascotas      Mascota[]
+
+  @@unique([nombre, especieId])
+  @@map("razas")
+}
+
+model Mascota {
+  id            Int      @id @default(autoincrement())
+  nombre        String
+  edad          Int?
+  sexo          Sexo     @default(DESCONOCIDO)
+  color         String?
+  peso          Float?
+  imagen        String?
+  observaciones String?
+  estado        Boolean  @default(true)
+  fechaRegistro DateTime @default(now())
+
+  duenoId       Int
+  dueno         Dueno    @relation(fields: [duenoId], references: [id])
+
+  especieId     Int
+  especie       Especie  @relation(fields: [especieId], references: [id])
+
+  razaId        Int?
+  raza          Raza?    @relation(fields: [razaId], references: [id])
+
+  @@map("mascotas")
+}
