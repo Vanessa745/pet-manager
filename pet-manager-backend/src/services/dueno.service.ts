@@ -4,7 +4,7 @@ interface CrearDuenoData {
   nombre: string;
   apellido: string;
   ci: string;
-  telefono: string;
+  telefono?: string | null;
   email?: string | null;
   direccion?: string | null;
 }
@@ -13,7 +13,7 @@ interface ActualizarDuenoData {
   nombre?: string;
   apellido?: string;
   ci?: string;
-  telefono?: string;
+  telefono?: string | null;
   email?: string | null;
   direccion?: string | null;
   estado?: boolean;
@@ -65,75 +65,70 @@ export const crearDueno = async (data: CrearDuenoData) => {
     throw new Error("Ya existe un dueño registrado con ese CI");
   }
 
-  return await prisma.dueno.create({
+  const nuevoDueno = await prisma.dueno.create({
     data: {
       nombre: data.nombre.trim(),
       apellido: data.apellido.trim(),
       ci: ciNormalizado,
-      telefono: data.telefono.trim(),
+      telefono: data.telefono?.trim() || null,
       email: data.email?.trim() || null,
-      direccion: data.direccion?.trim() || null,
-      estado: true
+      direccion: data.direccion?.trim() || null
     }
   });
+
+  return nuevoDueno;
 };
 
 export const actualizarDueno = async (
   id: number,
   data: ActualizarDuenoData
 ) => {
-  const dueno = await prisma.dueno.findUnique({
+  const duenoExistente = await prisma.dueno.findFirst({
     where: {
-      id
+      id,
+      estado: true
     }
   });
 
-  if (!dueno || !dueno.estado) {
+  if (!duenoExistente) {
     throw new Error("El dueño no existe");
   }
 
   if (data.ci) {
     const ciNormalizado = data.ci.trim();
 
-    const duenoExistente = await prisma.dueno.findUnique({
+    const ciExistente = await prisma.dueno.findFirst({
       where: {
-        ci: ciNormalizado
+        ci: ciNormalizado,
+        id: {
+          not: id
+        }
       }
     });
 
-    if (duenoExistente && duenoExistente.id !== id) {
+    if (ciExistente) {
       throw new Error("Ya existe otro dueño registrado con ese CI");
     }
-
-    data.ci = ciNormalizado;
   }
 
-  if (data.nombre) {
-    data.nombre = data.nombre.trim();
-  }
-
-  if (data.apellido) {
-    data.apellido = data.apellido.trim();
-  }
-
-  if (data.telefono) {
-    data.telefono = data.telefono.trim();
-  }
-
-  if (data.email) {
-    data.email = data.email.trim();
-  }
-
-  if (data.direccion) {
-    data.direccion = data.direccion.trim();
-  }
-
-  return await prisma.dueno.update({
+  const duenoActualizado = await prisma.dueno.update({
     where: {
       id
     },
-    data
+    data: {
+      nombre: data.nombre?.trim(),
+      apellido: data.apellido?.trim(),
+      ci: data.ci?.trim(),
+      telefono:
+        data.telefono === undefined ? undefined : data.telefono?.trim() || null,
+      email: data.email === undefined ? undefined : data.email?.trim() || null,
+      direccion:
+        data.direccion === undefined ? undefined : data.direccion?.trim() || null,
+      estado: data.estado
+    }
   });
+
+  return duenoActualizado;
 };
 
 export const eliminarDueno = async (id: number) => {
