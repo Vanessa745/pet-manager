@@ -19,7 +19,9 @@ export const crearDuenoSchema = z.object({
   telefono: z
     .string()
     .min(7, "El teléfono debe tener al menos 7 caracteres")
-    .max(20, "El teléfono no puede superar los 20 caracteres"),
+    .max(20, "El teléfono no puede superar los 20 caracteres")
+    .optional()
+    .nullable(),
 
   email: z
     .string()
@@ -57,7 +59,8 @@ export const actualizarDuenoSchema = z.object({
     .string()
     .min(7, "El teléfono debe tener al menos 7 caracteres")
     .max(20, "El teléfono no puede superar los 20 caracteres")
-    .optional(),
+    .optional()
+    .nullable(),
 
   email: z
     .string()
