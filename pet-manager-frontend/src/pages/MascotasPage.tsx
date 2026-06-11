@@ -26,7 +26,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 import Header from "../components/Header";
-import ConfirmDialog from "../components/ConfirmDIalog";
+import ConfirmDialog from "../components/ConfirmDialog";
 import EmptyState from "../components/EmptyState";
 import MascotaForm from "../components/MascotaForm";
 

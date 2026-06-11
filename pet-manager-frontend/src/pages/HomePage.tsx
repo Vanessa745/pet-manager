@@ -1,11 +1,9 @@
 import {
   Box,
-  Button,
   Card,
   CardContent,
   Chip,
   Container,
-  Stack,
   Typography
 } from "@mui/material";
 
@@ -14,12 +12,9 @@ import PetsIcon from "@mui/icons-material/Pets";
 import SecurityIcon from "@mui/icons-material/Security";
 import CategoryIcon from "@mui/icons-material/Category";
 import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
-import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 
 const HomePage = () => {
-  const navigate = useNavigate();
-
   return (
     <>
       <Helmet>

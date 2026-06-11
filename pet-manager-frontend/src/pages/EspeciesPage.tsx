@@ -24,7 +24,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CategoryIcon from "@mui/icons-material/Category";
 
-import ConfirmDialog from "../components/ConfirmDIalog";
+import ConfirmDialog from "../components/ConfirmDialog";
 import EspecieForm from "../components/EspecieForm";
 import Header from "../components/Header";
 

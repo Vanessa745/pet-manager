@@ -24,7 +24,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 
-import ConfirmDialog from "../components/ConfirmDIalog";
+import ConfirmDialog from "../components/ConfirmDialog";
 import Header from "../components/Header";
 import RazaForm from "../components/RazaForm";
 
