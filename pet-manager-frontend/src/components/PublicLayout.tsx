@@ -41,7 +41,7 @@ const PublicLayout = () => {
                 Pet Manager
               </Typography>
             </Box>
-
+              
             <Box sx={{ display: "flex", gap: 1 }}>
               {token ? (
                 <Button

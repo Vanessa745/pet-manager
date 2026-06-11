@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import {
   Alert,
+  Avatar,
   Box,
   Button,
   Card,
@@ -20,27 +21,35 @@ import {
   Typography
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import PetsIcon from "@mui/icons-material/Pets";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import AccountTreeIcon from "@mui/icons-material/AccountTree";
 
-import ConfirmDialog from "../components/ConfirmDIalog";
 import Header from "../components/Header";
-import RazaForm from "../components/RazaForm";
+import ConfirmDialog from "../components/ConfirmDIalog";
+import EmptyState from "../components/EmptyState";
+import MascotaForm from "../components/MascotaForm";
 
+import type { Dueno } from "../interfaces/dueno.interface";
 import type { Especie } from "../interfaces/especie.interface";
-import type { CrearRazaRequest, Raza } from "../interfaces/raza.interface";
+import type { Raza } from "../interfaces/raza.interface";
+import type {
+  CrearMascotaRequest,
+  Mascota
+} from "../interfaces/mascota.interface";
 
+import { obtenerDuenos } from "../services/dueno.service";
 import { obtenerEspecies } from "../services/especie.service";
+import { obtenerRazas } from "../services/raza.service";
 import {
-  actualizarRaza,
-  crearRaza,
-  eliminarRaza,
-  obtenerRazas
-} from "../services/raza.service";
-
+  actualizarMascota,
+  crearMascota,
+  eliminarMascota,
+  obtenerMascotas
+} from "../services/mascota.service";
 import { esAdmin } from "../services/auth.service";
 import { Helmet } from "react-helmet-async";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const obtenerMensajeError = (error: unknown) => {
   if (axios.isAxiosError(error)) {
@@ -58,11 +67,30 @@ const obtenerMensajeError = (error: unknown) => {
   return "Ocurrió un error inesperado";
 };
 
-const RazasPage = () => {
+const obtenerEtiquetaSexo = (sexo: string) => {
+  if (sexo === "MACHO") {
+    return "Macho";
+  }
+
+  if (sexo === "HEMBRA") {
+    return "Hembra";
+  }
+
+  return "Desconocido";
+};
+
+const MascotasPage = () => {
   const usuarioAdmin = esAdmin();
 
-  const [razas, setRazas] = useState<Raza[]>([]);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const estadoRuta = location.state as { abrirCrear?: boolean } | null;
+
+  const [mascotas, setMascotas] = useState<Mascota[]>([]);
+  const [duenos, setDuenos] = useState<Dueno[]>([]);
   const [especies, setEspecies] = useState<Especie[]>([]);
+  const [razas, setRazas] = useState<Raza[]>([]);
 
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
@@ -72,23 +100,28 @@ const RazasPage = () => {
   const [mensajeExito, setMensajeExito] = useState("");
 
   const [formAbierto, setFormAbierto] = useState(false);
-  const [razaEditar, setRazaEditar] = useState<Raza | null>(null);
+  const [mascotaEditar, setMascotaEditar] = useState<Mascota | null>(null);
 
   const [confirmAbierto, setConfirmAbierto] = useState(false);
-  const [razaEliminar, setRazaEliminar] = useState<Raza | null>(null);
+  const [mascotaEliminar, setMascotaEliminar] = useState<Mascota | null>(null);
 
   const cargarDatos = async () => {
     try {
       setCargando(true);
       setError("");
 
-      const [razasData, especiesData] = await Promise.all([
-        obtenerRazas(),
-        obtenerEspecies()
-      ]);
+      const [mascotasData, duenosData, especiesData, razasData] =
+        await Promise.all([
+          obtenerMascotas(),
+          obtenerDuenos(),
+          obtenerEspecies(),
+          obtenerRazas()
+        ]);
 
-      setRazas(razasData);
+      setMascotas(mascotasData);
+      setDuenos(duenosData);
       setEspecies(especiesData);
+      setRazas(razasData);
     } catch (error) {
       setError(obtenerMensajeError(error));
     } finally {
@@ -101,14 +134,39 @@ const RazasPage = () => {
   }, []);
 
   const abrirCrear = () => {
-    setRazaEditar(null);
+    setMascotaEditar(null);
     setFormAbierto(true);
     setError("");
     setMensajeExito("");
   };
 
-  const abrirEditar = (raza: Raza) => {
-    setRazaEditar(raza);
+  useEffect(() => {
+    if (
+      estadoRuta?.abrirCrear &&
+      usuarioAdmin &&
+      !cargando &&
+      duenos.length > 0 &&
+      especies.length > 0
+    ) {
+      abrirCrear();
+
+      navigate(location.pathname, {
+        replace: true,
+        state: {}
+      });
+    }
+  }, [
+    estadoRuta?.abrirCrear,
+    usuarioAdmin,
+    cargando,
+    duenos.length,
+    especies.length,
+    navigate,
+    location.pathname
+  ]);
+
+  const abrirEditar = (mascota: Mascota) => {
+    setMascotaEditar(mascota);
     setFormAbierto(true);
     setError("");
     setMensajeExito("");
@@ -120,25 +178,25 @@ const RazasPage = () => {
     }
 
     setFormAbierto(false);
-    setRazaEditar(null);
+    setMascotaEditar(null);
   };
 
-  const guardarRaza = async (data: CrearRazaRequest) => {
+  const guardarMascota = async (data: CrearMascotaRequest) => {
     try {
       setGuardando(true);
       setError("");
       setMensajeExito("");
 
-      if (razaEditar) {
-        await actualizarRaza(razaEditar.id, data);
-        setMensajeExito("Raza actualizada correctamente");
+      if (mascotaEditar) {
+        await actualizarMascota(mascotaEditar.id, data);
+        setMensajeExito("Mascota actualizada correctamente");
       } else {
-        await crearRaza(data);
-        setMensajeExito("Raza creada correctamente");
+        await crearMascota(data);
+        setMensajeExito("Mascota creada correctamente");
       }
 
       setFormAbierto(false);
-      setRazaEditar(null);
+      setMascotaEditar(null);
 
       await cargarDatos();
     } catch (error) {
@@ -148,8 +206,8 @@ const RazasPage = () => {
     }
   };
 
-  const abrirConfirmacionEliminar = (raza: Raza) => {
-    setRazaEliminar(raza);
+  const abrirConfirmacionEliminar = (mascota: Mascota) => {
+    setMascotaEliminar(mascota);
     setConfirmAbierto(true);
     setError("");
     setMensajeExito("");
@@ -161,11 +219,11 @@ const RazasPage = () => {
     }
 
     setConfirmAbierto(false);
-    setRazaEliminar(null);
+    setMascotaEliminar(null);
   };
 
   const confirmarEliminar = async () => {
-    if (!razaEliminar) {
+    if (!mascotaEliminar) {
       return;
     }
 
@@ -174,11 +232,11 @@ const RazasPage = () => {
       setError("");
       setMensajeExito("");
 
-      await eliminarRaza(razaEliminar.id);
+      await eliminarMascota(mascotaEliminar.id);
 
-      setMensajeExito("Raza eliminada correctamente");
+      setMensajeExito("Mascota eliminada correctamente");
       setConfirmAbierto(false);
-      setRazaEliminar(null);
+      setMascotaEliminar(null);
 
       await cargarDatos();
     } catch (error) {
@@ -191,16 +249,16 @@ const RazasPage = () => {
   return (
     <>
       <Helmet>
-        <title>Pet Manager | Razas</title>
+        <title>Pet Manager | Mascotas</title>
 
         <meta
           name="description"
-          content="Administra las razas y variedades de mascotas en Pet Manager, relacionando cada raza con su especie correspondiente."
+          content="Administra el registro principal de mascotas en Pet Manager, relacionando cada mascota con su dueño, especie y raza correspondiente."
         />
 
         <meta
           name="keywords"
-          content="Pet Manager, razas, especies, mascotas, razas de perros, razas de gatos, catálogo de razas"
+          content="Pet Manager, mascotas, gestión de mascotas, dueños, especies, razas, catálogo de mascotas, CRUD mascotas"
         />
 
         <meta
@@ -210,12 +268,12 @@ const RazasPage = () => {
 
         <meta
           property="og:title"
-          content="Pet Manager | Gestión de razas"
+          content="Pet Manager | Gestión de mascotas"
         />
 
         <meta
           property="og:description"
-          content="Gestiona razas o variedades de mascotas y relaciónalas correctamente con especies dentro del sistema Pet Manager."
+          content="Gestiona mascotas registradas con información de dueño, especie, raza, edad, sexo, peso e imagen dentro del sistema Pet Manager."
         />
 
         <meta
@@ -226,15 +284,15 @@ const RazasPage = () => {
       
       <Box>
         <Header
-          title="Razas"
-          subtitle="Administra las razas o variedades relacionadas con cada especie."
+          title="Mascotas"
+          subtitle="Administra el registro principal de mascotas del sistema."
           action={
             usuarioAdmin ? (
               <Button
                 variant="contained"
                 startIcon={<AddIcon />}
                 onClick={abrirCrear}
-                disabled={especies.length === 0}
+                disabled={duenos.length === 0 || especies.length === 0}
                 sx={{
                   bgcolor: "#0f766e",
                   "&:hover": {
@@ -242,7 +300,7 @@ const RazasPage = () => {
                   }
                 }}
               >
-                Nueva raza
+                Nueva mascota
               </Button>
             ) : (
               <Chip label="Solo visualización" color="info" variant="outlined" />
@@ -257,13 +315,19 @@ const RazasPage = () => {
           {!usuarioAdmin && (
             <Alert severity="info">
               Tu rol actual permite visualizar registros, pero no crear, editar ni
-              eliminar razas.
+              eliminar mascotas.
+            </Alert>
+          )}
+
+          {usuarioAdmin && duenos.length === 0 && !cargando && (
+            <Alert severity="warning">
+              Primero debes registrar al menos un dueño antes de crear mascotas.
             </Alert>
           )}
 
           {usuarioAdmin && especies.length === 0 && !cargando && (
             <Alert severity="warning">
-              Primero debes registrar al menos una especie antes de crear razas.
+              Primero debes registrar al menos una especie antes de crear mascotas.
             </Alert>
           )}
         </Stack>
@@ -287,66 +351,50 @@ const RazasPage = () => {
               >
                 <CircularProgress sx={{ color: "#0f766e" }} />
               </Box>
-            ) : razas.length === 0 ? (
-              <Box
-                sx={{
-                  minHeight: 260,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexDirection: "column",
-                  textAlign: "center",
-                  px: 2
-                }}
-              >
-                <AccountTreeIcon
-                  sx={{ fontSize: 70, color: "#0f766e", mb: 2 }}
-                />
-
-                <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                  No hay razas registradas
-                </Typography>
-
-                <Typography color="text.secondary" sx={{ mt: 1 }}>
-                  Cuando registres razas o variedades, aparecerán en esta sección.
-                </Typography>
-
-                {usuarioAdmin && especies.length > 0 && (
-                  <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={abrirCrear}
-                    sx={{
-                      mt: 3,
-                      bgcolor: "#0f766e",
-                      "&:hover": {
-                        bgcolor: "#115e59"
-                      }
-                    }}
-                  >
-                    Crear primera raza
-                  </Button>
-                )}
-              </Box>
+            ) : mascotas.length === 0 ? (
+              <EmptyState
+                icon={<PetsIcon sx={{ fontSize: 72 }} />}
+                title="No hay mascotas registradas"
+                description="Cuando registres mascotas, aparecerán en esta sección junto con su dueño, especie y raza."
+                actionText={
+                  usuarioAdmin && duenos.length > 0 && especies.length > 0
+                    ? "Crear primera mascota"
+                    : undefined
+                }
+                onAction={
+                  usuarioAdmin && duenos.length > 0 && especies.length > 0
+                    ? abrirCrear
+                    : undefined
+                }
+              />
             ) : (
               <TableContainer>
                 <Table>
                   <TableHead>
                     <TableRow>
                       <TableCell>
-                        <strong>Nombre</strong>
+                        <strong>Mascota</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Dueño</strong>
                       </TableCell>
                       <TableCell>
                         <strong>Especie</strong>
                       </TableCell>
                       <TableCell>
-                        <strong>Descripción</strong>
+                        <strong>Raza</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Sexo</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Edad</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Peso</strong>
                       </TableCell>
                       <TableCell>
                         <strong>Estado</strong>
-                      </TableCell>
-                      <TableCell>
-                        <strong>Fecha de registro</strong>
                       </TableCell>
 
                       {usuarioAdmin && (
@@ -358,16 +406,39 @@ const RazasPage = () => {
                   </TableHead>
 
                   <TableBody>
-                    {razas.map((raza) => (
-                      <TableRow key={raza.id} hover>
+                    {mascotas.map((mascota) => (
+                      <TableRow key={mascota.id} hover>
+                        <TableCell>
+                          <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
+                            <Avatar
+                              src={mascota.imagen || undefined}
+                              alt={`Imagen de ${mascota.nombre}`}
+                              sx={{ bgcolor: "#ccfbf1", color: "#0f766e" }}
+                            >
+                              <PetsIcon />
+                            </Avatar>
+
+                            <Box>
+                              <Typography sx={{ fontWeight: 800 }}>
+                                {mascota.nombre}
+                              </Typography>
+
+                              <Typography variant="caption" color="text.secondary">
+                                {mascota.color || "Sin color registrado"}
+                              </Typography>
+                            </Box>
+                          </Stack>
+                        </TableCell>
 
                         <TableCell>
-                          <Typography sx={{ fontWeight: 700 }}>{raza.nombre}</Typography>
+                          {mascota.dueno
+                            ? `${mascota.dueno.nombre} ${mascota.dueno.apellido}`
+                            : "Sin dueño"}
                         </TableCell>
 
                         <TableCell>
                           <Chip
-                            label={raza.especie?.nombre || "Sin especie"}
+                            label={mascota.especie?.nombre || "Sin especie"}
                             size="small"
                             sx={{
                               bgcolor: "#ccfbf1",
@@ -378,23 +449,33 @@ const RazasPage = () => {
                         </TableCell>
 
                         <TableCell>
-                          {raza.descripcion || "Sin descripción"}
+                          {mascota.raza?.nombre || "Sin raza"}
+                        </TableCell>
+
+                        <TableCell>{obtenerEtiquetaSexo(mascota.sexo)}</TableCell>
+
+                        <TableCell>
+                          {mascota.edad === null || mascota.edad === undefined
+                            ? "Sin edad"
+                            : `${mascota.edad} años`}
+                        </TableCell>
+
+                        <TableCell>
+                          {mascota.peso === null || mascota.peso === undefined
+                            ? "Sin peso"
+                            : `${mascota.peso} kg`}
                         </TableCell>
 
                         <TableCell>
                           <Chip
-                            label={raza.estado ? "Activo" : "Inactivo"}
+                            label={mascota.estado ? "Activo" : "Inactivo"}
                             size="small"
                             sx={{
-                              bgcolor: raza.estado ? "#ccfbf1" : "#fee2e2",
-                              color: raza.estado ? "#0f766e" : "#b91c1c",
+                              bgcolor: mascota.estado ? "#ccfbf1" : "#fee2e2",
+                              color: mascota.estado ? "#0f766e" : "#b91c1c",
                               fontWeight: 700
                             }}
                           />
-                        </TableCell>
-
-                        <TableCell>
-                          {new Date(raza.fechaRegistro).toLocaleDateString()}
                         </TableCell>
 
                         {usuarioAdmin && (
@@ -402,7 +483,7 @@ const RazasPage = () => {
                             <Tooltip title="Editar">
                               <IconButton
                                 color="primary"
-                                onClick={() => abrirEditar(raza)}
+                                onClick={() => abrirEditar(mascota)}
                               >
                                 <EditIcon />
                               </IconButton>
@@ -412,7 +493,7 @@ const RazasPage = () => {
                               <IconButton
                                 color="error"
                                 onClick={() =>
-                                  abrirConfirmacionEliminar(raza)
+                                  abrirConfirmacionEliminar(mascota)
                                 }
                               >
                                 <DeleteIcon />
@@ -429,21 +510,23 @@ const RazasPage = () => {
           </CardContent>
         </Card>
 
-        <RazaForm
+        <MascotaForm
           open={formAbierto}
           loading={guardando}
-          razaEditar={razaEditar}
+          mascotaEditar={mascotaEditar}
+          duenos={duenos}
           especies={especies}
+          razas={razas}
           onClose={cerrarFormulario}
-          onSubmit={guardarRaza}
+          onSubmit={guardarMascota}
         />
 
         <ConfirmDialog
           open={confirmAbierto}
-          title="Eliminar raza"
-          message={`¿Estás segura de eliminar la raza "${
-            razaEliminar?.nombre || ""
-          }"? Esta acción solo se permitirá si no tiene mascotas asociadas.`}
+          title="Eliminar mascota"
+          message={`¿Estás segura de eliminar la mascota "${
+            mascotaEliminar?.nombre || ""
+          }"?`}
           confirmText="Eliminar"
           loading={eliminando}
           onCancel={cerrarConfirmacionEliminar}
@@ -454,4 +537,4 @@ const RazasPage = () => {
   );
 };
 
-export default RazasPage;
+export default MascotasPage;
