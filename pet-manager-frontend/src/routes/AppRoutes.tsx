@@ -12,6 +12,7 @@ import EspeciesPage from "../pages/EspeciesPage";
 import RazasPage from "../pages/RazasPage";
 import DuenosPage from "../pages/DuenosPage";
 import MascotasPage from "../pages/MascotasPage";
+import NotFoundPage from "../pages/NotFoundPage";
 
 const AppRoutes = () => {
   return (
@@ -30,6 +31,10 @@ const AppRoutes = () => {
             <Route path="/duenos" element={<DuenosPage />} />
             <Route path="/mascotas" element={<MascotasPage />} />
           </Route>
+        </Route>
+
+        <Route element={<PublicLayout />}>
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
