@@ -43,6 +43,7 @@ import {
 import { esAdmin } from "../services/auth.service";
 import { Helmet } from "react-helmet-async";
 import { useLocation, useNavigate } from "react-router-dom";
+import EmptyState from "../components/EmptyState";
 
 const obtenerMensajeError = (error: unknown) => {
   if (axios.isAxiosError(error)) {
@@ -293,45 +294,21 @@ const DuenosPage = () => {
                 <CircularProgress sx={{ color: "#0f766e" }} />
               </Box>
             ) : duenos.length === 0 ? (
-              <Box
-                sx={{
-                  minHeight: 260,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexDirection: "column",
-                  textAlign: "center",
-                  px: 2
-                }}
-              >
-                <PeopleAltIcon sx={{ fontSize: 70, color: "#0f766e", mb: 2 }} />
-
-                <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                  No hay dueños registrados
-                </Typography>
-
-                <Typography color="text.secondary" sx={{ mt: 1 }}>
-                  Cuando registres propietarios de mascotas, aparecerán en esta
-                  sección.
-                </Typography>
-
-                {usuarioAdmin && (
-                  <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={abrirCrear}
-                    sx={{
-                      mt: 3,
-                      bgcolor: "#0f766e",
-                      "&:hover": {
-                        bgcolor: "#115e59"
-                      }
-                    }}
-                  >
-                    Crear primer dueño
-                  </Button>
-                )}
-              </Box>
+              <EmptyState
+                icon={<PeopleAltIcon sx={{ fontSize: 72 }} />}
+                title="No hay dueños registrados"
+                description="Cuando registres propietarios de mascotas, aparecerán en esta sección."
+                actionText={
+                  usuarioAdmin
+                    ? "Crear primer dueño"
+                    : undefined
+                }
+                onAction={
+                  usuarioAdmin
+                    ? abrirCrear
+                    : undefined
+                }
+              />
             ) : (
               <TableContainer>
                 <Table>

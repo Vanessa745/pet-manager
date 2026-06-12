@@ -41,6 +41,7 @@ import {
 
 import { esAdmin } from "../services/auth.service";
 import { Helmet } from "react-helmet-async";
+import EmptyState from "../components/EmptyState";
 
 const obtenerMensajeError = (error: unknown) => {
   if (axios.isAxiosError(error)) {
@@ -288,46 +289,21 @@ const RazasPage = () => {
                 <CircularProgress sx={{ color: "#0f766e" }} />
               </Box>
             ) : razas.length === 0 ? (
-              <Box
-                sx={{
-                  minHeight: 260,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexDirection: "column",
-                  textAlign: "center",
-                  px: 2
-                }}
-              >
-                <AccountTreeIcon
-                  sx={{ fontSize: 70, color: "#0f766e", mb: 2 }}
-                />
-
-                <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                  No hay razas registradas
-                </Typography>
-
-                <Typography color="text.secondary" sx={{ mt: 1 }}>
-                  Cuando registres razas o variedades, aparecerán en esta sección.
-                </Typography>
-
-                {usuarioAdmin && especies.length > 0 && (
-                  <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={abrirCrear}
-                    sx={{
-                      mt: 3,
-                      bgcolor: "#0f766e",
-                      "&:hover": {
-                        bgcolor: "#115e59"
-                      }
-                    }}
-                  >
-                    Crear primera raza
-                  </Button>
-                )}
-              </Box>
+              <EmptyState
+                icon={<AccountTreeIcon sx={{ fontSize: 72 }} />}
+                title="No hay razas registradas"
+                description="Cuando registres razas o variedades, aparecerán en esta sección."
+                actionText={
+                  usuarioAdmin && especies.length > 0
+                    ? "Crear primera raza"
+                    : undefined
+                }
+                onAction={
+                  usuarioAdmin && especies.length > 0
+                    ? abrirCrear
+                    : undefined
+                }
+              />
             ) : (
               <TableContainer>
                 <Table>

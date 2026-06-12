@@ -42,6 +42,7 @@ import type {
 
 import { esAdmin } from "../services/auth.service";
 import { Helmet } from "react-helmet-async";
+import EmptyState from "../components/EmptyState";
 
 const obtenerMensajeError = (error: unknown) => {
   if (axios.isAxiosError(error)) {
@@ -280,45 +281,60 @@ const EspeciesPage = () => {
                 <CircularProgress sx={{ color: "#0f766e" }} />
               </Box>
             ) : especies.length === 0 ? (
-              <Box
-                sx={{
-                  minHeight: 260,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexDirection: "column",
-                  textAlign: "center",
-                  px: 2
-                }}
-              >
-                <CategoryIcon sx={{ fontSize: 70, color: "#0f766e", mb: 2 }} />
+              // <Box
+              //   sx={{
+              //     minHeight: 260,
+              //     display: "flex",
+              //     alignItems: "center",
+              //     justifyContent: "center",
+              //     flexDirection: "column",
+              //     textAlign: "center",
+              //     px: 2
+              //   }}
+              // >
+              //   <CategoryIcon sx={{ fontSize: 70, color: "#0f766e", mb: 2 }} />
 
-                <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                  No hay especies registradas
-                </Typography>
+              //   <Typography variant="h6" sx={{ fontWeight: 800 }}>
+              //     No hay especies registradas
+              //   </Typography>
 
-                <Typography color="text.secondary" sx={{ mt: 1 }}>
-                  Cuando registres especies como perro, gato, pez o ave,
-                  aparecerán en esta sección.
-                </Typography>
+              //   <Typography color="text.secondary" sx={{ mt: 1 }}>
+              //     Cuando registres especies como perro, gato, pez o ave,
+              //     aparecerán en esta sección.
+              //   </Typography>
 
-                {usuarioAdmin && (
-                  <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={abrirCrear}
-                    sx={{
-                      mt: 3,
-                      bgcolor: "#0f766e",
-                      "&:hover": {
-                        bgcolor: "#115e59"
-                      }
-                    }}
-                  >
-                    Crear primera especie
-                  </Button>
-                )}
-              </Box>
+              //   {usuarioAdmin && (
+              //     <Button
+              //       variant="contained"
+              //       startIcon={<AddIcon />}
+              //       onClick={abrirCrear}
+              //       sx={{
+              //         mt: 3,
+              //         bgcolor: "#0f766e",
+              //         "&:hover": {
+              //           bgcolor: "#115e59"
+              //         }
+              //       }}
+              //     >
+              //       Crear primera especie
+              //     </Button>
+              //   )}
+              // </Box>
+              <EmptyState
+                icon={<CategoryIcon sx={{ fontSize: 72 }} />}
+                title="No hay especies registradas"
+                description="Cuando registres especies como perro, gato, pez o ave, aparecerán en esta sección."
+                actionText={
+                  usuarioAdmin
+                    ? "Crear primera especie"
+                    : undefined
+                }
+                onAction={
+                  usuarioAdmin
+                    ? abrirCrear
+                    : undefined
+                }
+              />
             ) : (
               <TableContainer>
                 <Table>
